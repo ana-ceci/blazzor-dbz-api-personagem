@@ -1,0 +1,92 @@
+﻿@page "/"
+@using Personagem.Models
+@inject HttpClient Http
+
+<PageTitle>Dragon Ball API</PageTitle>
+
+<h1>Personagem - Dragon Ball</h1>
+
+<div class="form-group">
+    <label for="id-input">
+        <input type="number" class="form-control" id="idInput" @bind="idPersonagem"
+            placeholder="Digite o ID do personagem:" />
+    </label>
+</div>
+
+<button class="btn btn-primary mt-2" @onclick="ConsultarPersonagem">
+    Buscar Personagem
+</button>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger mt-3">@errorMessage</div>
+}
+
+@if (personagem != null)
+{
+    <h3 class="mt-4">Resultado:</h3>
+
+    <table class="table table-bordered">
+        <tbody>
+            <tr>
+                <td><strong>Nome:</strong></td>
+                <td>@personagem.name</td>
+            </tr>
+            <tr>
+                <td><strong>Planeta:</strong></td>
+                <td>@personagem.origin?.planet</td>
+            </tr>
+            <tr>
+                <td><strong>Transformações:</strong></td>
+                <td>
+                    @if (personagem.transformations != null && personagem.transformations.Any())
+                    {
+                        <ul>
+                            @foreach (var t in personagem.transformations)
+                            {
+                                <li>@t.name</li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <em>Sem transformações</em>
+                    }
+                </td>
+            </tr>
+        </tbody>
+    </table>
+}
+
+@code {
+    private int idPersonagem;
+    private Personagem personagem;
+    private string errorMessage;
+
+    private async Task ConsultarPersonagem()
+    {
+        errorMessage = string.Empty;
+        personagem = null;
+
+        if (idPersonagem <= 0)
+        {
+            errorMessage = "Por favor, digite um ID válido.";
+            return;
+        }
+
+        try
+        {
+            string url = $"https://dragonball-api.com/api/characters/{idPersonagem}";
+            personagem = await Http.GetFromJsonAsync<Personagem>(url);
+
+            if (personagem == null)
+            {
+                errorMessage = "Personagem não encontrado.";
+            }
+        }
+        catch (Exception e)
+        {
+            errorMessage = $"Erro ao conectar na API: {e.Message}";
+        }
+    }
+}
